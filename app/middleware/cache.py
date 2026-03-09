@@ -50,7 +50,6 @@ async def cache_middleware(request: Request, call_next):
                 WHERE id = $1
             """, row["id"])
 
-        request.state.cache_hit = True
         return JSONResponse(content={
             "id": "cache-hit",
             "object": "chat.completion",
@@ -68,9 +67,6 @@ async def cache_middleware(request: Request, call_next):
     request.state.cache_hit = False
     request.state.query_text = last_user_msg
     request.state.query_embedding = query_embedding
+    request.state.body_bytes = body_bytes
 
-    async def receive():
-        return {"type": "http.request", "body": body_bytes}
-
-    request._receive = receive
     return await call_next(request)

@@ -4,7 +4,11 @@ from jose import jwt, JWTError
 from app.config import settings
 
 async def auth_middleware(request: Request, call_next):
-    if request.url.path in ["/health", "/metrics", "/docs", "/openapi.json"]:
+    if request.url.path in ["/health", "/metrics", "/docs", "/openapi.json",
+                         "/tenants", "/tenants/"] or \
+    request.url.path.startswith("/tenants/") or \
+    request.url.path.startswith("/audit") or \
+    request.url.path.startswith("/cache"):
         return await call_next(request)
 
     auth_header = request.headers.get("Authorization")
