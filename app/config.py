@@ -11,10 +11,9 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     LANGFUSE_PUBLIC_KEY: str = ""
     LANGFUSE_SECRET_KEY: str = ""
+    LANGFUSE_BASE_URL: str = ""
     SENTRY_DSN: str = ""
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 
-    class Config:
-        env_file = str(BASE_DIR/".env")
-
+    model_config = {"env_file": str(BASE_DIR / ".env"), "extra": "ignore"}
 settings = Settings()

@@ -2,7 +2,10 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
+import sentry_sdk
 
+from app.config import settings
 from app.database import create_pool, close_pool
 from app.redis_client import get_redis
 from app.services.embedder import get_embedder
@@ -12,6 +15,13 @@ from app.middleware.cache import cache_middleware
 from app.middleware.sanitizer import sanitizer_middleware
 
 from app.routes import gateway, tenants, audit, health
+
+# Sentry — initialize before app
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        traces_sample_rate=1.0,
+    )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,6 +42,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Prometheus
+Instrumentator().instrument(app).expose(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,9 +52,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Register middleware — FastAPI executes in REVERSE order
-# So register: sanitizer → cache → budget → auth
-# Execution order: auth → budget → cache → sanitizer → route
+# Middleware — reverse registration order
 app.middleware("http")(sanitizer_middleware)
 app.middleware("http")(cache_middleware)
 app.middleware("http")(budget_middleware)

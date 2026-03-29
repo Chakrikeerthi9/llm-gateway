@@ -7,6 +7,24 @@ from app.services.llm import stream_completion
 from app.services.reconciliation import reconcile
 import json
 
+from prometheus_client import Counter, Histogram
+
+cache_hits = Counter(
+    "gateway_cache_hits_total",
+    "Total cache hits",
+    ["tenant_id"]
+)
+cache_misses = Counter(
+    "gateway_cache_misses_total",
+    "Total cache misses",
+    ["tenant_id"]
+)
+llm_latency = Histogram(
+    "gateway_llm_latency_seconds",
+    "LLM response latency",
+    ["model"]
+)
+
 router = APIRouter()
 
 @router.post("/v1/chat/completions")
@@ -40,6 +58,10 @@ async def chat_completions(request: Request):
                 model=chat_req.model,
                 messages=[m.dict() for m in chat_req.messages],
                 temperature=chat_req.temperature
+            )
+
+            llm_latency.labels(model=chat_req.model).observe(
+                (time.time() - start_time)
             )
 
             async for chunk in response:

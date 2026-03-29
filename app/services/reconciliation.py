@@ -1,7 +1,20 @@
 from app.database import get_pool
 from app.redis_client import get_redis
 from app.services.cost import calculate_cost
-import asyncio
+from app.config import settings
+
+_langfuse = None
+
+def get_langfuse():
+    global _langfuse
+    if _langfuse is None and settings.LANGFUSE_PUBLIC_KEY:
+        from langfuse import Langfuse
+        _langfuse = Langfuse(
+            public_key=settings.LANGFUSE_PUBLIC_KEY,
+            secret_key=settings.LANGFUSE_SECRET_KEY,
+            host=settings.LANGFUSE_BASE_URL,
+        )
+    return _langfuse
 
 async def reconcile(
     tenant_id: str,
@@ -36,6 +49,31 @@ async def reconcile(
                 VALUES ($1, $2::vector, $3, $4, $5)
             """, tenant_id, str(query_embedding),
                  query_text, response_text, model)
+
+    lf = get_langfuse()
+    if lf:
+        try:
+            generation = lf.start_generation(
+            name="llm-completion",
+            model=model,
+            input=query_text,
+            output=response_text,
+            usage_details={
+                "input": input_tokens,
+                "output": output_tokens,
+            },
+            metadata={
+                "tenant_id": tenant_id,
+                "cached": cached,
+                "cost_usd": cost,
+                "latency_ms": latency_ms
+            }
+        )
+            generation.end()
+            lf.flush()
+            print(f"LangFuse trace sent for tenant {tenant_id}")
+        except Exception as e:
+            print(f"LangFuse error: {e}")
 
     r = await get_redis()
     credits_to_deduct = max(1, int(cost * 1000))

@@ -3,6 +3,12 @@ from fastapi.responses import JSONResponse
 from app.services.embedder import embed
 import numpy as np
 
+from prometheus_client import Counter
+injections_blocked = Counter(
+    "gateway_injections_blocked_total",
+    "Total injection attempts blocked"
+)
+
 INJECTION_THRESHOLD = 0.75
 
 INJECTION_TEMPLATES = [
@@ -46,6 +52,7 @@ async def sanitizer_middleware(request: Request, call_next):
     for template_vec in templates:
         similarity = cosine_similarity(query_embedding, template_vec)
         if similarity > INJECTION_THRESHOLD:
+            injections_blocked.inc()
             return JSONResponse(
                 status_code=400,
                 content={
