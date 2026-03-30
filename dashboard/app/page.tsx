@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
+const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY || "";
 
 export default function Home() {
   const [health, setHealth] = useState<any>(null);
@@ -11,8 +12,12 @@ export default function Home() {
 
   useEffect(() => {
     fetch(`${API}/health`).then(r => r.json()).then(setHealth);
-    fetch(`${API}/cache/stats`).then(r => r.json()).then(setCacheStats);
-    fetch(`${API}/audit/cost-summary`).then(r => r.json()).then(setCostSummary);
+    fetch(`${API}/cache/stats`, {
+      headers: { "X-Admin-Key": ADMIN_KEY }
+    }).then(r => r.json()).then(setCacheStats);
+    fetch(`${API}/audit/cost-summary`, {
+      headers: { "X-Admin-Key": ADMIN_KEY }
+    }).then(r => r.json()).then(setCostSummary);
   }, []);
 
   const totalRequests = costSummary.reduce((a, b) => a + b.total_requests, 0);

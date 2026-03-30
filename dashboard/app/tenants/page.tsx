@@ -3,13 +3,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
+const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY || "";
 
 export default function Tenants() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API}/tenants`)
+    fetch(`${API}/tenants`, {
+      headers: { "X-Admin-Key": ADMIN_KEY }
+    })
       .then(r => r.json())
       .then(data => { setTenants(data); setLoading(false); });
   }, []);

@@ -8,7 +8,8 @@ async def create_pool():
     _pool = await asyncpg.create_pool(
         settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"),
         min_size=2,
-        max_size=10
+        max_size=10,
+        ssl=False
     )
     return _pool
 

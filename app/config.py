@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     LANGFUSE_BASE_URL: str = ""
     SENTRY_DSN: str = ""
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    ADMIN_API_KEY: str = ""
 
     model_config = {"env_file": str(BASE_DIR / ".env"), "extra": "ignore"}
 settings = Settings()
