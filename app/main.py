@@ -30,8 +30,6 @@ async def lifespan(app: FastAPI):
     print("PostgreSQL pool created")
     await get_redis()
     print("Redis connected")
-    get_embedder()
-    print("Embedder loaded")
     yield
     print("Shutting down...")
     await close_pool()
