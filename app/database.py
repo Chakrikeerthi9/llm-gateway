@@ -9,7 +9,7 @@ async def create_pool():
         settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"),
         min_size=2,
         max_size=10,
-        ssl=False
+        ssl="require"
     )
     return _pool
 
