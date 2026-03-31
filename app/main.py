@@ -6,9 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 
 from app.config import settings
-from app.database import create_pool, close_pool
-from app.redis_client import get_redis
-from app.services.embedder import get_embedder
+from app.database import close_pool
 from app.middleware.auth import auth_middleware
 from app.middleware.budget import budget_middleware
 from app.middleware.cache import cache_middleware
@@ -26,10 +24,7 @@ if settings.SENTRY_DSN:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Starting up...")
-    await create_pool()
-    print("PostgreSQL pool created")
-    await get_redis()
-    print("Redis connected")
+    # Don't connect at startup — connect on first request
     yield
     print("Shutting down...")
     await close_pool()
@@ -45,10 +40,9 @@ Instrumentator().instrument(app).expose(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_credentials=True,
 )
 
 # Middleware — reverse registration order
