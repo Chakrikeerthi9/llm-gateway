@@ -26,7 +26,7 @@ CREATE INDEX idx_audit_created ON audit_log(created_at DESC);
 CREATE TABLE semantic_cache (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id),
-    query_embedding vector(384),
+    query_embedding vector(1536),
     query_text      TEXT NOT NULL,
     response_text   TEXT NOT NULL,
     model           VARCHAR(100),
