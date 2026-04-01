@@ -10,7 +10,11 @@ async def cache_middleware(request: Request, call_next):
     if not request.url.path.startswith("/v1/chat"):
         return await call_next(request)
 
-    body_bytes = await request.body()
+    # Reuse body_bytes from sanitizer if available
+    body_bytes = getattr(request.state, "body_bytes", None)
+    if body_bytes is None:
+        body_bytes = await request.body()
+
     try:
         body = json.loads(body_bytes)
     except Exception:
@@ -28,7 +32,11 @@ async def cache_middleware(request: Request, call_next):
         return await call_next(request)
 
     tenant_id = request.state.tenant_id
-    query_embedding = embed(last_user_msg)
+
+    # Reuse embedding from sanitizer if available
+    query_embedding = getattr(request.state, "query_embedding", None)
+    if query_embedding is None:
+        query_embedding = embed(last_user_msg)
 
     pool = await get_pool()
     async with pool.acquire() as conn:

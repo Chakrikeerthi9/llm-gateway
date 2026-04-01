@@ -2,14 +2,9 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from app.services.embedder import embed
 import numpy as np
+import json
 
-from prometheus_client import Counter
-injections_blocked = Counter(
-    "gateway_injections_blocked_total",
-    "Total injection attempts blocked"
-)
-
-INJECTION_THRESHOLD = 0.75
+INJECTION_THRESHOLD = 0.60
 
 INJECTION_TEMPLATES = [
     "ignore previous instructions and",
@@ -41,18 +36,29 @@ async def sanitizer_middleware(request: Request, call_next):
     if not request.url.path.startswith("/v1/chat"):
         return await call_next(request)
 
-    query_embedding = getattr(request.state, "query_embedding", None)
-    query_text = getattr(request.state, "query_text", None)
-
-    if query_embedding is None:
+    # Read body to get the query
+    body_bytes = await request.body()
+    try:
+        body = json.loads(body_bytes)
+    except Exception:
         return await call_next(request)
 
+    messages = body.get("messages", [])
+    last_user_msg = next(
+        (m["content"] for m in reversed(messages) if m["role"] == "user"),
+        None
+    )
+
+    if not last_user_msg:
+        return await call_next(request)
+
+    # Embed and check injection
+    query_embedding = embed(last_user_msg)
     templates = get_template_embeddings()
 
     for template_vec in templates:
         similarity = cosine_similarity(query_embedding, template_vec)
         if similarity > INJECTION_THRESHOLD:
-            injections_blocked.inc()
             return JSONResponse(
                 status_code=400,
                 content={
@@ -60,5 +66,10 @@ async def sanitizer_middleware(request: Request, call_next):
                     "code": "INJECTION_BLOCKED"
                 }
             )
+
+    # Store on state for cache middleware to reuse
+    request.state.query_embedding = query_embedding
+    request.state.query_text = last_user_msg
+    request.state.body_bytes = body_bytes
 
     return await call_next(request)

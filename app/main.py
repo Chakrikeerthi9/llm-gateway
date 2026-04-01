@@ -46,8 +46,8 @@ app.add_middleware(
 )
 
 # Middleware — reverse registration order
-app.middleware("http")(sanitizer_middleware)
 app.middleware("http")(cache_middleware)
+app.middleware("http")(sanitizer_middleware)
 app.middleware("http")(budget_middleware)
 app.middleware("http")(auth_middleware)
 
