@@ -9,6 +9,23 @@ export default function Home() {
   const [health, setHealth] = useState<any>(null);
   const [cacheStats, setCacheStats] = useState<any>(null);
   const [costSummary, setCostSummary] = useState<any[]>([]);
+  const [apiReady, setApiReady] = useState(false);
+  const [waking, setWaking] = useState(true);
+
+  useEffect(() => {
+    // Wake up Render on dashboard load
+    const wake = async () => {
+      setWaking(true);
+      try {
+        const res = await fetch(`${API}/health`);
+        if (res.ok) setApiReady(true);
+      } catch {
+        setApiReady(false);
+      }
+      setWaking(false);
+    };
+    wake();
+  }, []);
 
   useEffect(() => {
     fetch(`${API}/health`).then(r => r.json()).then(setHealth);
@@ -31,6 +48,23 @@ export default function Home() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">LLM Gateway</h1>
           <p className="text-gray-400 mt-1">Production observability dashboard</p>
+          {waking && (
+            <div className="bg-yellow-900 border border-yellow-700 text-yellow-300 text-sm px-4 py-3 text-center">
+              ⏳ Waking up the API server — this takes ~50 seconds on the free tier. Please wait...
+            </div>
+          )}
+
+          {!waking && !apiReady && (
+            <div className="bg-red-900 border border-red-700 text-red-300 text-sm px-4 py-3 text-center">
+              ⚠️ API server is unavailable. Try refreshing in 30 seconds.
+            </div>
+          )}
+
+          {!waking && apiReady && (
+            <div className="bg-green-900 border border-green-700 text-green-300 text-sm px-4 py-3 text-center">
+              ✅ API server is live and ready.
+            </div>
+          )}
         </div>
 
         {/* Status */}
