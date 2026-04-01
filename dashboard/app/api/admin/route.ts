@@ -9,10 +9,17 @@ const ALLOWED_POST = ["tenants"];
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const endpoint = searchParams.get("endpoint") || "";
+  const limit = searchParams.get("limit") || "";
+
   if (!ALLOWED_GET.includes(endpoint)) {
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }
-  const res = await fetch(`${API}/${endpoint}`, {
+
+  const upstreamUrl = limit
+    ? `${API}/${endpoint}?limit=${limit}`
+    : `${API}/${endpoint}`;
+
+  const res = await fetch(upstreamUrl, {
     headers: { "X-Admin-Key": ADMIN_KEY || "" },
     cache: "no-store"
   });

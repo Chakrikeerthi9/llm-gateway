@@ -7,7 +7,7 @@ export default function Audit() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/admin?endpoint=audit?limit=50`)
+    fetch(`/api/admin?endpoint=audit&limit=50`)
       .then(r => r.json())
       .then(data => { setLogs(data); setLoading(false); });
   }, []);
