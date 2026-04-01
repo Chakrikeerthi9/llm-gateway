@@ -1,9 +1,6 @@
 "use client";
 import { useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL;
-const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY || "";
-
 export default function Admin() {
   const [name, setName] = useState("");
   const [plan, setPlan] = useState("starter");
@@ -13,12 +10,9 @@ export default function Admin() {
 
   async function createTenant() {
     setLoading(true);
-    const res = await fetch(`${API}/tenants`, {
+    const res = await fetch(`/api/admin?endpoint=tenants`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Admin-Key": ADMIN_KEY
-      },
+      headers: { "Content-Type": "application/json"},
       body: JSON.stringify({ name, plan, credits })
     });
     const data = await res.json();

@@ -13,14 +13,14 @@ async def health():
         async with pool.acquire() as conn:
             await conn.fetchval("SELECT 1")
     except Exception as e:
-        status["postgres"] = f"error: {str(e)}"
+        status["postgres"] = "unavailable"
         status["status"] = "degraded"
 
     try:
         r = await get_redis()
         await r.ping()
     except Exception as e:
-        status["redis"] = f"error: {str(e)}"
+        status["redis"] = "unavailable"
         status["status"] = "degraded"
 
     return status

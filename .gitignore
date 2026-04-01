@@ -2,4 +2,5 @@ venv/
 .env
 __pycache__/
 *.pyc
-.DS_Storelocustfile.py
+.DS_Store
+locustfile.py

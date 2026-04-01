@@ -2,17 +2,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const API = process.env.NEXT_PUBLIC_API_URL;
-const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY || "";
-
 export default function Audit() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API}/audit?limit=50`, {
-      headers: { "X-Admin-Key": ADMIN_KEY }
-    })
+    fetch(`/api/admin?endpoint=audit?limit=50`)
       .then(r => r.json())
       .then(data => { setLogs(data); setLoading(false); });
   }, []);

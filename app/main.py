@@ -23,10 +23,10 @@ if settings.SENTRY_DSN:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if not settings.ADMIN_API_KEY:
+        raise RuntimeError("ADMIN_API_KEY must be set. Refusing to start.")
     print("Starting up...")
-    # Don't connect at startup — connect on first request
     yield
-    print("Shutting down...")
     await close_pool()
 
 app = FastAPI(
