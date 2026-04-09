@@ -6,11 +6,14 @@ _pool = None
 
 async def create_pool():
     global _pool
+    db_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+    is_internal = "oregon-postgres.render.com" not in db_url
+    ssl_setting = False if is_internal else "require"
     _pool = await asyncpg.create_pool(
-        settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"),
+        db_url,
         min_size=2,
         max_size=10,
-        ssl="require"
+        ssl=ssl_setting
     )
     return _pool
 
