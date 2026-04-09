@@ -6,12 +6,11 @@ _pool = None
 
 async def create_pool():
     global _pool
-    ssl_setting = "require" if os.environ.get("RENDER") else False
     _pool = await asyncpg.create_pool(
         settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"),
         min_size=2,
         max_size=10,
-        ssl=ssl_setting
+        ssl="require"
     )
     return _pool
 
